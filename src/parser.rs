@@ -34,7 +34,10 @@ impl Parser {
                 Some('@') => println!("@"), // TODO
                 Some('(') => println!("("), // TODO
                 Some(_) => {
-                    self.parse_c();
+                    let (dest, comp, jump) = self.parse_c();
+                    self.dest = dest;
+                    self.comp = comp;
+                    self.jump = jump;
                     println!("{:?}{:?}{:?}", self.dest, self.comp, self.jump)
                 }
                 None => (),
@@ -44,26 +47,54 @@ impl Parser {
         }
     }
 
-    pub fn parse_c(&mut self) {
+    pub fn parse_c(&mut self) -> (Option<String>, Option<String>, Option<String>) {
         if !self.commands[self.index].contains(";") {
-            let splited_equal: Vec<&str> = self.commands[self.index].split("=").collect();
-            self.dest = Some(splited_equal[0].to_string());
-            self.comp = Some(splited_equal[1].to_string());
-            self.jump = None;
+            self.parse_c_without_semi_colon(&self.commands[self.index])
         } else if !self.commands[self.index].contains("=") {
-            let splited_semicolon: Vec<&str> = self.commands[self.index].split(";").collect();
-            self.dest = None;
-            self.comp = Some(splited_semicolon[0].to_string());
-            self.jump = Some(splited_semicolon[1].to_string());
+            self.parse_c_without_equal(&self.commands[self.index])
         } else {
-            let splited_equal: Vec<&str> = self.commands[self.index].split("=").collect();
-            let splited_semicolon: Vec<&str> = splited_equal[1].split(";").collect();
-            self.dest = Some(splited_equal[0].to_string());
-            self.comp = Some(splited_semicolon[0].to_string());
-            self.jump = Some(splited_semicolon[1].to_string());
+            self.parse_c_with_both(&self.commands[self.index])
         }
     }
+
+    fn parse_c_without_semi_colon(
+        &self,
+        command: &String,
+    ) -> (Option<String>, Option<String>, Option<String>) {
+        let splited_equal: Vec<&str> = command.split("=").collect();
+        (
+            Some(splited_equal[0].to_string()),
+            Some(splited_equal[1].to_string()),
+            None,
+        )
+    }
+
+    fn parse_c_without_equal(
+        &self,
+        command: &String,
+    ) -> (Option<String>, Option<String>, Option<String>) {
+        let splited_semicolon: Vec<&str> = command.split(";").collect();
+        (
+            None,
+            Some(splited_semicolon[0].to_string()),
+            Some(splited_semicolon[1].to_string()),
+        )
+    }
+
+    fn parse_c_with_both(
+        &self,
+        command: &String,
+    ) -> (Option<String>, Option<String>, Option<String>) {
+        let splited_equal: Vec<&str> = command.split("=").collect();
+        let splited_semicolon: Vec<&str> = splited_equal[1].split(";").collect();
+        (
+            Some(splited_equal[0].to_string()),
+            Some(splited_semicolon[0].to_string()),
+            Some(splited_semicolon[1].to_string()),
+        )
+    }
 }
+
 fn read_lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
     let file = File::open(filename).expect("Failed to open.");
     let buf = BufReader::new(file);
