@@ -15,6 +15,7 @@ struct Parser {
     commands: Vec<String>,
     index: usize,
     command_type: Option<CommandType>,
+    symbol: Option<String>,
     dest: Option<String>,
     comp: Option<String>,
     jump: Option<String>,
@@ -27,6 +28,7 @@ impl Parser {
             commands,
             index: 0,
             has_more_commands,
+            symbol: None,
             dest: None,
             comp: None,
             jump: None,
@@ -36,6 +38,7 @@ impl Parser {
 
     pub fn advance(&mut self) {
         if self.has_more_commands {
+            self.clear();
             let flag = self.commands[self.index].chars().nth(0);
             match flag {
                 Some('/') => (),
@@ -50,12 +53,20 @@ impl Parser {
         }
     }
 
+    fn clear(&mut self) {
+        self.symbol = None;
+        self.dest = None;
+        self.comp = None;
+        self.jump = None;
+    }
+
     pub fn parse(&mut self) {
+        let command = &self.commands[self.index];
         match self.command_type {
-            Some(CommandType::Acommand) => println!("A"),
-            Some(CommandType::Lcommand) => println!("L"),
+            Some(CommandType::Acommand) => self.symbol = Some(self.parse_a(&command)),
+            Some(CommandType::Lcommand) => self.symbol = Some(self.parse_l(&command)),
             Some(CommandType::Ccommand) => {
-                let (dest, comp, jump) = self.parse_c();
+                let (dest, comp, jump) = self.parse_c(&command);
                 self.dest = dest;
                 self.comp = comp;
                 self.jump = jump;
@@ -64,13 +75,25 @@ impl Parser {
         }
     }
 
-    pub fn parse_c(&mut self) -> (Option<String>, Option<String>, Option<String>) {
-        if !self.commands[self.index].contains(";") {
-            self.parse_c_without_semi_colon(&self.commands[self.index])
-        } else if !self.commands[self.index].contains("=") {
-            self.parse_c_without_equal(&self.commands[self.index])
+    fn parse_a(&self, command: &String) -> String {
+        command.trim_matches('@').to_string()
+    }
+
+    fn parse_l(&self, command: &String) -> String {
+        command
+            .trim_matches('(')
+            .to_string()
+            .trim_matches(')')
+            .to_string()
+    }
+
+    fn parse_c(&self, command: &String) -> (Option<String>, Option<String>, Option<String>) {
+        if !command.contains(";") {
+            self.parse_c_without_semi_colon(&command)
+        } else if !command.contains("=") {
+            self.parse_c_without_equal(&command)
         } else {
-            self.parse_c_with_both(&self.commands[self.index])
+            self.parse_c_with_both(&command)
         }
     }
 
