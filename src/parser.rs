@@ -4,10 +4,17 @@ use std::{
     path::Path,
 };
 
+enum CommandType {
+    Acommand,
+    Ccommand,
+    Lcommand,
+}
+
 struct Parser {
     has_more_commands: bool,
     commands: Vec<String>,
     index: usize,
+    command_type: Option<CommandType>,
     dest: Option<String>,
     comp: Option<String>,
     jump: Option<String>,
@@ -23,6 +30,7 @@ impl Parser {
             dest: None,
             comp: None,
             jump: None,
+            command_type: None,
         }
     }
 
@@ -31,19 +39,28 @@ impl Parser {
             let flag = self.commands[self.index].chars().nth(0);
             match flag {
                 Some('/') => (),
-                Some('@') => println!("@"), // TODO
-                Some('(') => println!("("), // TODO
-                Some(_) => {
-                    let (dest, comp, jump) = self.parse_c();
-                    self.dest = dest;
-                    self.comp = comp;
-                    self.jump = jump;
-                    println!("{:?}{:?}{:?}", self.dest, self.comp, self.jump)
-                }
+                Some('@') => self.command_type = Some(CommandType::Acommand),
+                Some('(') => self.command_type = Some(CommandType::Lcommand),
+                Some(_) => self.command_type = Some(CommandType::Ccommand),
                 None => (),
             }
+            self.parse();
             self.index = self.index + 1;
             self.has_more_commands = self.commands.len() > self.index;
+        }
+    }
+
+    pub fn parse(&mut self) {
+        match self.command_type {
+            Some(CommandType::Acommand) => println!("A"),
+            Some(CommandType::Lcommand) => println!("L"),
+            Some(CommandType::Ccommand) => {
+                let (dest, comp, jump) = self.parse_c();
+                self.dest = dest;
+                self.comp = comp;
+                self.jump = jump;
+            }
+            None => (),
         }
     }
 
