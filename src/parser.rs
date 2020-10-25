@@ -135,6 +135,52 @@ impl Parser {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_parse_a() {
+        let commands: Vec<String> = vec![];
+        let parser = Parser::new(commands);
+        let symbol = parser.parse_a(&"@value".to_string());
+        assert_eq!(symbol, "value".to_string());
+    }
+    #[test]
+    fn test_parse_l() {
+        let commands: Vec<String> = vec![];
+        let parser = Parser::new(commands);
+        let symbol = parser.parse_l(&"(loop)".to_string());
+        assert_eq!(symbol, "loop".to_string());
+    }
+    #[test]
+    fn test_parse_c_without_equal() {
+        let commands: Vec<String> = vec![];
+        let parser = Parser::new(commands);
+        let (dest, comp, jump) = parser.parse_c_without_equal(&"D;loop".to_string());
+        assert_eq!(dest, None);
+        assert_eq!(comp, Some("D".to_string()));
+        assert_eq!(jump, Some("loop".to_string()));
+    }
+    #[test]
+    fn test_parse_c_without_semi_colon() {
+        let commands: Vec<String> = vec![];
+        let parser = Parser::new(commands);
+        let (dest, comp, jump) = parser.parse_c_without_semi_colon(&"D=M".to_string());
+        assert_eq!(dest, Some("D".to_string()));
+        assert_eq!(comp, Some("M".to_string()));
+        assert_eq!(jump, None);
+    }
+    #[test]
+    fn test_parse_c_with_both() {
+        let commands: Vec<String> = vec![];
+        let parser = Parser::new(commands);
+        let (dest, comp, jump) = parser.parse_c_with_both(&"D=A;loop".to_string());
+        assert_eq!(dest, Some("D".to_string()));
+        assert_eq!(comp, Some("A".to_string()));
+        assert_eq!(jump, Some("loop".to_string()));
+    }
+}
+
 fn read_lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
     let file = File::open(filename).expect("Failed to open.");
     let buf = BufReader::new(file);
