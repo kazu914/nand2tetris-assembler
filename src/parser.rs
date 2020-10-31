@@ -1,24 +1,19 @@
-use std::{
-    fs::File,
-    io::{prelude::*, BufReader},
-    path::Path,
-};
-
-enum CommandType {
+#[derive(Debug)]
+pub enum CommandType {
     Acommand,
     Ccommand,
     Lcommand,
 }
 
-struct Parser {
-    has_more_commands: bool,
+pub struct Parser {
+    pub has_more_commands: bool,
     commands: Vec<String>,
     index: usize,
-    command_type: Option<CommandType>,
-    symbol: Option<String>,
-    dest: Option<String>,
-    comp: Option<String>,
-    jump: Option<String>,
+    pub command_type: Option<CommandType>,
+    pub symbol: Option<String>,
+    pub dest: Option<String>,
+    pub comp: Option<String>,
+    pub jump: Option<String>,
 }
 
 impl Parser {
@@ -178,20 +173,5 @@ mod test {
         assert_eq!(dest, Some("D".to_string()));
         assert_eq!(comp, Some("A".to_string()));
         assert_eq!(jump, Some("loop".to_string()));
-    }
-}
-
-fn read_lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
-    let file = File::open(filename).expect("Failed to open.");
-    let buf = BufReader::new(file);
-    buf.lines().map(|l| l.expect("Failed to read")).collect()
-}
-
-pub fn main() {
-    let lines = read_lines_from_file("./Add.asm");
-    let mut parser = Parser::new(lines);
-
-    while parser.has_more_commands {
-        parser.advance();
     }
 }
