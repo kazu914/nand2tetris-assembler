@@ -26,7 +26,10 @@ fn main() {
                 let jump = code::jump_to_binary(&parser.jump);
                 println!("111{}{}{}", comp, dest, jump);
             }
-            Some(parser::CommandType::Acommand) => println!("pass:A"),
+            Some(parser::CommandType::Acommand) => {
+                let symbol = code::decimal_to_binary(&parser.symbol);
+                println!("{}", symbol);
+            }
             Some(parser::CommandType::Lcommand) => println!("pass:L"),
         }
     }
