@@ -59,6 +59,16 @@ pub fn comp_to_binary(mnemonic: &Option<String>) -> String {
         _ => panic!("Unknown-Mnemonic error"),
     }
 }
+
+pub fn decimal_to_binary(decimal: &Option<String>) -> String {
+    match decimal.as_deref() {
+        None => panic!("decimal not provided."),
+        Some(decimal) => {
+            let parsed_decimal = decimal.parse::<i32>().expect("Invalid decimal");
+            format!("{:0>16b}", parsed_decimal)
+        }
+    }
+}
 #[cfg(test)]
 mod test {
     use super::*;
@@ -89,5 +99,25 @@ mod test {
     #[should_panic(expected = "Unknown-Mnemonic error")]
     fn test_comp_to_binary() {
         comp_to_binary(&Some("UnknownMnemonic".to_string()));
+    }
+
+    #[test]
+    fn test_decimal_to_binary() {
+        assert_eq!(
+            decimal_to_binary(&Some("100".to_string())),
+            "0000000001100100"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "decimal not provided.")]
+    fn test_decimal_to_binary_none() {
+        decimal_to_binary(&None);
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid decimal")]
+    fn test_decimal_to_binary_panic() {
+        decimal_to_binary(&Some("aaa".to_string()));
     }
 }
