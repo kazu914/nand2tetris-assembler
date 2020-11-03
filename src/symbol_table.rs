@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 pub struct SymbolTable {
-    table: HashMap<&'static str, &'static str>,
+    table: HashMap<String, String>,
 }
 
 impl SymbolTable {
@@ -11,7 +11,7 @@ impl SymbolTable {
         }
     }
 
-    pub fn add_entry(&mut self, symbol: &'static str, address: &'static str) {
+    pub fn add_entry(&mut self, symbol: String, address: String) {
         self.table.insert(symbol, address);
     }
 
@@ -19,8 +19,11 @@ impl SymbolTable {
         self.table.contains_key(symbol)
     }
 
-    pub fn get_address(&self, symbol: &'static str) -> &'static str {
-        self.table.get(symbol).expect("Entry not found error")
+    pub fn get_address(&self, symbol: &str) -> String {
+        self.table
+            .get(symbol)
+            .expect("Entry not found error")
+            .to_string()
     }
 }
 
@@ -30,8 +33,8 @@ mod test {
     #[test]
     fn test_symbol_table() {
         let mut table = SymbolTable::new();
-        let address = "0000000001100100";
-        table.add_entry("symbol", address);
+        let address = "0000000001100100".to_string();
+        table.add_entry("symbol".to_string(), address.clone());
         assert_eq!(table.contains("symbol"), true);
         assert_eq!(table.get_address("symbol"), address);
     }
