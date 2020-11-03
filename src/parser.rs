@@ -34,7 +34,7 @@ impl Parser {
     pub fn advance(&mut self) {
         if self.has_more_commands {
             self.clear();
-            let flag = self.commands[self.index].chars().nth(0);
+            let flag = self.commands[self.index].trim().chars().nth(0);
             match flag {
                 Some('/') => (),
                 Some('@') => self.command_type = Some(CommandType::Acommand),
@@ -56,7 +56,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) {
-        let command = &self.commands[self.index];
+        let command = &self.commands[self.index].trim().to_string();
         match self.command_type {
             Some(CommandType::Acommand) => self.symbol = Some(self.parse_a(&command)),
             Some(CommandType::Lcommand) => self.symbol = Some(self.parse_l(&command)),
