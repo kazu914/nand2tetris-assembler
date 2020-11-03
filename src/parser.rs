@@ -31,6 +31,12 @@ impl Parser {
         }
     }
 
+    pub fn init_index(&mut self) {
+        self.index = 0;
+        self.has_more_commands = self.commands.len() > self.index;
+        self.command_type = None;
+    }
+
     pub fn advance(&mut self) {
         if self.has_more_commands {
             self.clear();
