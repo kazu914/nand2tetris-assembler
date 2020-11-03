@@ -13,8 +13,8 @@ impl SymbolTable {
         self.table.insert(symbol, address);
     }
 
-    pub fn contains(&self, symbol: &'static str) -> bool {
-        self.table.contains_key(symbol)
+    pub fn contains(&self, symbol: String) -> bool {
+        self.table.contains_key(symbol.as_str())
     }
 
     pub fn get_address(&self, symbol: &str) -> String {
@@ -63,10 +63,10 @@ mod test {
     #[test]
     fn test_symbol_table_predefined() {
         let table = SymbolTable::new();
-        assert_eq!(table.contains("R0"), true);
+        assert_eq!(table.contains("R0".to_string()), true);
         assert_eq!(table.get_address("R0"), format!("{:0>16b}", 0));
 
-        assert_eq!(table.contains("KBD"), true);
+        assert_eq!(table.contains("KBD".to_string()), true);
         assert_eq!(table.get_address("KBD"), format!("{:0>16b}", 24576));
     }
     #[test]
@@ -74,14 +74,14 @@ mod test {
         let mut table = SymbolTable::new();
         let address = "0000000001100100".to_string();
         table.add_entry("symbol".to_string(), address.clone());
-        assert_eq!(table.contains("symbol"), true);
+        assert_eq!(table.contains("symbol".to_string()), true);
         assert_eq!(table.get_address("symbol"), address);
     }
 
     #[test]
     fn test_symbol_table_not_contain() {
         let table = SymbolTable::new();
-        assert_eq!(table.contains("symbol"), false);
+        assert_eq!(table.contains("symbol".to_string()), false);
     }
 
     #[test]
