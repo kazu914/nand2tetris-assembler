@@ -77,7 +77,9 @@ impl Assembler {
         match &self.parser.symbol {
             None => (),
             Some(symbol) => {
-                if self.symbol_table.contains(symbol.to_string()) {
+                if symbol.parse::<usize>().is_ok() {
+                    println!("{}", code::decimal_to_binary(symbol));
+                } else if self.symbol_table.contains(symbol.to_string()) {
                     println!("{}", self.symbol_table.get_address(symbol));
                 } else {
                     //TODO add new symbol here
@@ -88,7 +90,7 @@ impl Assembler {
 }
 
 fn main() {
-    let lines = read_lines_from_file("./Max.asm");
+    let lines = read_lines_from_file("./Pong.asm");
     let mut assembler = Assembler::new(lines);
     assembler.parse();
 }
