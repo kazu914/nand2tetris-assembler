@@ -32,6 +32,29 @@ impl Assembler {
     }
 
     fn parse(&mut self) {
+        self.first_path();
+        self.parser.init_index();
+        self.second_path();
+    }
+
+    fn first_path(&mut self) {
+        while self.parser.has_more_commands {
+            self.parser.advance();
+            match &self.parser.command_type {
+                None => continue,
+                Some(parser::CommandType::Lcommand) => {
+                    let symbol = self.parser.symbol.clone().unwrap();
+                    let address = format!("{:0>16b}", self.rom_address);
+                    self.symbol_table.add_entry(symbol, address);
+                }
+                Some(_) => {
+                    self.rom_address += 1;
+                }
+            }
+        }
+    }
+
+    fn second_path(&mut self) {
         while self.parser.has_more_commands {
             self.parser.advance();
             match &self.parser.command_type {
@@ -43,28 +66,21 @@ impl Assembler {
                     println!("111{}{}{}", comp, dest, jump);
                 }
                 Some(parser::CommandType::Acommand) => {
-                    let symbol = code::decimal_to_binary(&self.parser.symbol);
-                    println!("{}", symbol);
+                    self.process_a_command();
                 }
-                Some(parser::CommandType::Lcommand) => println!("pass:L"),
+                Some(parser::CommandType::Lcommand) => (),
             }
         }
     }
 
-    fn first_path(&mut self) {
-        while self.parser.has_more_commands {
-            self.parser.advance();
-            match &self.parser.command_type {
-                None => continue,
-                Some(parser::CommandType::Lcommand) => {
-                    let symbol = self.parser.symbol.clone().unwrap();
-                    let address = format!("{:0>16b}", self.rom_address + 1);
-                    println!("{}{}", symbol, address);
-                    self.symbol_table.add_entry(symbol, address);
-                }
-                Some(_) => {
-                    self.rom_address += 1;
-                    println!("{}", self.rom_address);
+    fn process_a_command(&self) {
+        match &self.parser.symbol {
+            None => (),
+            Some(symbol) => {
+                if self.symbol_table.contains(symbol.to_string()) {
+                    println!("{}", self.symbol_table.get_address(symbol));
+                } else {
+                    //TODO add new symbol here
                 }
             }
         }
@@ -74,7 +90,7 @@ impl Assembler {
 fn main() {
     let lines = read_lines_from_file("./Max.asm");
     let mut assembler = Assembler::new(lines);
-    assembler.first_path()
+    assembler.parse();
 }
 
 #[cfg(test)]
@@ -90,11 +106,11 @@ mod test {
             "D;JGT".to_string(),
         ];
 
-        let symbol_address = format!("{:0>16b}", 3);
+        let symbol_address = format!("{:0>16b}", 2);
 
         let mut assembler = Assembler::new(lines);
         assembler.first_path();
-        assert_eq!(assembler.symbol_table.contains("symbol"), true);
+        assert_eq!(assembler.symbol_table.contains("symbol".to_string()), true);
         assert_eq!(assembler.symbol_table.get_address("symbol"), symbol_address);
     }
 }
