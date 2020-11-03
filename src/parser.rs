@@ -20,7 +20,7 @@ impl Parser {
     pub fn new(commands: Vec<String>) -> Parser {
         let has_more_commands = commands.len() > 0;
         Parser {
-            commands,
+            commands: Parser::remove_unnecessary_parts(commands),
             index: 0,
             has_more_commands,
             symbol: None,
@@ -31,12 +31,17 @@ impl Parser {
         }
     }
 
+    pub fn init_index(&mut self) {
+        self.index = 0;
+        self.has_more_commands = self.commands.len() > self.index;
+        self.command_type = None;
+    }
+
     pub fn advance(&mut self) {
         if self.has_more_commands {
             self.clear();
             let flag = self.commands[self.index].chars().nth(0);
             match flag {
-                Some('/') => (),
                 Some('@') => self.command_type = Some(CommandType::Acommand),
                 Some('(') => self.command_type = Some(CommandType::Lcommand),
                 Some(_) => self.command_type = Some(CommandType::Ccommand),
@@ -56,7 +61,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) {
-        let command = &self.commands[self.index];
+        let command = &self.commands[self.index].to_string();
         match self.command_type {
             Some(CommandType::Acommand) => self.symbol = Some(self.parse_a(&command)),
             Some(CommandType::Lcommand) => self.symbol = Some(self.parse_l(&command)),
@@ -128,6 +133,26 @@ impl Parser {
             Some(splited_semicolon[1].to_string()),
         )
     }
+
+    fn remove_comments(command: String) -> String {
+        command.split("//").collect::<Vec<&str>>()[0]
+            .trim()
+            .to_string()
+    }
+
+    fn remove_unnecessary_parts(original_commands: Vec<String>) -> Vec<String> {
+        let mut new_commands: Vec<String> = Vec::new();
+        for command in original_commands {
+            let flag = command.trim().chars().nth(0);
+            match flag {
+                Some('/') => (),
+                None => (),
+                Some(_) => new_commands.push(Parser::remove_comments(command)),
+            }
+        }
+
+        new_commands
+    }
 }
 
 #[cfg(test)]
@@ -173,5 +198,26 @@ mod test {
         assert_eq!(dest, Some("D".to_string()));
         assert_eq!(comp, Some("A".to_string()));
         assert_eq!(jump, Some("loop".to_string()));
+    }
+
+    #[test]
+    fn test_remove_comments() {
+        let command = "   D=M  // this is comment".to_string();
+        assert_eq!(Parser::remove_comments(command), "D=M");
+    }
+
+    #[test]
+    fn test_remove_unnecessary_parts() {
+        let original_commands = vec![
+            "//this is comment line".to_string(),
+            "D=M // here also comment".to_string(),
+            "   @19    //whitespace should be trimmed".to_string(),
+        ];
+
+        let new_commands = vec!["D=M".to_string(), "@19".to_string()];
+        assert_eq!(
+            Parser::remove_unnecessary_parts(original_commands),
+            new_commands
+        );
     }
 }

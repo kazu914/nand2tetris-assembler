@@ -55,19 +55,14 @@ pub fn comp_to_binary(mnemonic: &Option<String>) -> String {
         Some("D&A") => "0000000".to_string(),
         Some("D&M") => "1000000".to_string(),
         Some("D|A") => "0010101".to_string(),
-        Some("D|M") => "!010101".to_string(),
+        Some("D|M") => "1010101".to_string(),
         _ => panic!("Unknown-Mnemonic error"),
     }
 }
 
-pub fn decimal_to_binary(decimal: &Option<String>) -> String {
-    match decimal.as_deref() {
-        None => panic!("decimal not provided."),
-        Some(decimal) => {
-            let parsed_decimal = decimal.parse::<i32>().expect("Invalid decimal");
-            format!("{:0>16b}", parsed_decimal)
-        }
-    }
+pub fn decimal_to_binary(decimal: &String) -> String {
+    let parsed_decimal = decimal.parse::<i32>().expect("Invalid decimal");
+    format!("{:0>16b}", parsed_decimal)
 }
 #[cfg(test)]
 mod test {
@@ -103,21 +98,6 @@ mod test {
 
     #[test]
     fn test_decimal_to_binary() {
-        assert_eq!(
-            decimal_to_binary(&Some("100".to_string())),
-            "0000000001100100"
-        );
-    }
-
-    #[test]
-    #[should_panic(expected = "decimal not provided.")]
-    fn test_decimal_to_binary_none() {
-        decimal_to_binary(&None);
-    }
-
-    #[test]
-    #[should_panic(expected = "Invalid decimal")]
-    fn test_decimal_to_binary_panic() {
-        decimal_to_binary(&Some("aaa".to_string()));
+        assert_eq!(decimal_to_binary(&"100".to_string()), "0000000001100100");
     }
 }
