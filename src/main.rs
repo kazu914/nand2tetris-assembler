@@ -17,6 +17,7 @@ fn read_lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 pub struct Assembler {
     parser: parser::Parser,
     symbol_table: symbol_table::SymbolTable,
+    rom_address: usize,
 }
 
 impl Assembler {
@@ -26,6 +27,7 @@ impl Assembler {
         Assembler {
             parser,
             symbol_table,
+            rom_address: 0,
         }
     }
 
@@ -48,10 +50,51 @@ impl Assembler {
             }
         }
     }
+
+    fn first_path(&mut self) {
+        while self.parser.has_more_commands {
+            self.parser.advance();
+            match &self.parser.command_type {
+                None => continue,
+                Some(parser::CommandType::Lcommand) => {
+                    let symbol = self.parser.symbol.clone().unwrap();
+                    let address = format!("{:0>16b}", self.rom_address + 1);
+                    println!("{}{}", symbol, address);
+                    self.symbol_table.add_entry(symbol, address);
+                }
+                Some(_) => {
+                    self.rom_address += 1;
+                    println!("{}", self.rom_address);
+                }
+            }
+        }
+    }
 }
 
 fn main() {
-    let lines = read_lines_from_file("./Add.asm");
+    let lines = read_lines_from_file("./Max.asm");
     let mut assembler = Assembler::new(lines);
-    assembler.parse()
+    assembler.first_path()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_first_path() {
+        let lines: Vec<String> = vec![
+            "// symbol table test".to_string(),
+            "@R0".to_string(),
+            "D=M".to_string(),
+            "(symbol)".to_string(),
+            "D;JGT".to_string(),
+        ];
+
+        let symbol_address = format!("{:0>16b}", 3);
+
+        let mut assembler = Assembler::new(lines);
+        assembler.first_path();
+        assert_eq!(assembler.symbol_table.contains("symbol"), true);
+        assert_eq!(assembler.symbol_table.get_address("symbol"), symbol_address);
+    }
 }
