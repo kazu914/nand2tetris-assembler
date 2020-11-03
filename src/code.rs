@@ -55,7 +55,7 @@ pub fn comp_to_binary(mnemonic: &Option<String>) -> String {
         Some("D&A") => "0000000".to_string(),
         Some("D&M") => "1000000".to_string(),
         Some("D|A") => "0010101".to_string(),
-        Some("D|M") => "!010101".to_string(),
+        Some("D|M") => "1010101".to_string(),
         _ => panic!("Unknown-Mnemonic error"),
     }
 }
