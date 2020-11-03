@@ -73,7 +73,7 @@ impl Assembler {
         }
     }
 
-    fn process_a_command(&self) {
+    fn process_a_command(&mut self) {
         match &self.parser.symbol {
             None => (),
             Some(symbol) => {
@@ -82,7 +82,8 @@ impl Assembler {
                 } else if self.symbol_table.contains(symbol.to_string()) {
                     println!("{}", self.symbol_table.get_address(symbol));
                 } else {
-                    //TODO add new symbol here
+                    self.symbol_table.add_entry(symbol.clone(), None);
+                    println!("{}", self.symbol_table.get_address(symbol));
                 }
             }
         }
