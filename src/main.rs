@@ -1,5 +1,6 @@
 use assembler::code;
 use assembler::parser;
+use assembler::symbol_table;
 
 use std::{
     fs::File,
@@ -15,12 +16,17 @@ fn read_lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 
 pub struct Assembler {
     parser: parser::Parser,
+    symbol_table: symbol_table::SymbolTable,
 }
 
 impl Assembler {
     pub fn new(lines: Vec<String>) -> Assembler {
         let parser = parser::Parser::new(lines);
-        Assembler { parser }
+        let symbol_table = symbol_table::SymbolTable::new();
+        Assembler {
+            parser,
+            symbol_table,
+        }
     }
 
     fn parse(&mut self) {
