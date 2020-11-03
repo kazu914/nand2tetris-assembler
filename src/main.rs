@@ -1,14 +1,26 @@
 use assembler::code;
 use assembler::parser;
 use assembler::symbol_table;
+use clap::Clap;
 
 use std::{
     fs::File,
     io::{prelude::*, BufReader},
-    path::Path,
 };
 
-fn read_lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
+#[derive(Clap, Debug)]
+#[clap(
+    name = "Assembler in nand2teris project",
+    version = "1.0.0",
+    author = "Kazuaki Nomura",
+    about = "Assembler of Hack computer"
+)]
+struct Opts {
+    #[clap(name = "FILE")]
+    asm_file: Option<String>,
+}
+
+fn read_lines_from_file(filename: &str) -> Vec<String> {
     let file = File::open(filename).expect("Failed to open.");
     let buf = BufReader::new(file);
     buf.lines().map(|l| l.expect("Failed to read")).collect()
@@ -18,6 +30,7 @@ pub struct Assembler {
     parser: parser::Parser,
     symbol_table: symbol_table::SymbolTable,
     rom_address: usize,
+    result: Vec<String>,
 }
 
 impl Assembler {
@@ -28,6 +41,7 @@ impl Assembler {
             parser,
             symbol_table,
             rom_address: 0,
+            result: Vec::new(),
         }
     }
 
@@ -57,43 +71,60 @@ impl Assembler {
     fn second_path(&mut self) {
         while self.parser.has_more_commands {
             self.parser.advance();
-            match &self.parser.command_type {
-                None => continue,
+            let res: Option<String> = match &self.parser.command_type {
+                None => None,
+                Some(parser::CommandType::Lcommand) => None,
                 Some(parser::CommandType::Ccommand) => {
                     let dest = code::dest_to_binary(&self.parser.dest);
                     let comp = code::comp_to_binary(&self.parser.comp);
                     let jump = code::jump_to_binary(&self.parser.jump);
-                    println!("111{}{}{}", comp, dest, jump);
+                    Some(format!("111{}{}{}", comp, dest, jump))
                 }
-                Some(parser::CommandType::Acommand) => {
-                    self.process_a_command();
-                }
-                Some(parser::CommandType::Lcommand) => (),
+                Some(parser::CommandType::Acommand) => self.process_a_command(),
+            };
+
+            match res {
+                Some(line) => self.result.push(line),
+                None => continue,
             }
         }
     }
 
-    fn process_a_command(&mut self) {
+    fn process_a_command(&mut self) -> Option<String> {
         match &self.parser.symbol {
-            None => (),
+            None => None,
             Some(symbol) => {
                 if symbol.parse::<usize>().is_ok() {
-                    println!("{}", code::decimal_to_binary(symbol));
+                    Some(format!("{}", code::decimal_to_binary(symbol)))
                 } else if self.symbol_table.contains(symbol.to_string()) {
-                    println!("{}", self.symbol_table.get_address(symbol));
+                    Some(format!("{}", self.symbol_table.get_address(symbol)))
                 } else {
                     self.symbol_table.add_entry(symbol.clone(), None);
-                    println!("{}", self.symbol_table.get_address(symbol));
+                    Some(format!("{}", self.symbol_table.get_address(symbol)))
                 }
             }
+        }
+    }
+
+    pub fn output(&self, output_file: &str) {
+        let mut output = std::fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(output_file)
+            .unwrap();
+        for line in &self.result {
+            writeln!(output, "{}", line).unwrap();
         }
     }
 }
 
 fn main() {
-    let lines = read_lines_from_file("./Pong.asm");
+    let opts = Opts::parse();
+    let asm_file = opts.asm_file.expect("filename is not specified");
+    let lines = read_lines_from_file(&asm_file);
     let mut assembler = Assembler::new(lines);
     assembler.parse();
+    assembler.output(asm_file.to_string().replace(".asm", ".hack").as_str());
 }
 
 #[cfg(test)]
