@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 pub struct SymbolTable {
     table: HashMap<String, String>,
+    ram_address: usize,
 }
 
 impl SymbolTable {
@@ -9,8 +10,17 @@ impl SymbolTable {
         SymbolTable::make_predefined_symbol_table()
     }
 
-    pub fn add_entry(&mut self, symbol: String, address: String) {
-        self.table.insert(symbol, address);
+    pub fn add_entry<T: Into<Option<String>>>(&mut self, symbol: String, address: T) {
+        match address.into() {
+            None => {
+                self.table
+                    .insert(symbol, format!("{:0>16b}", self.ram_address));
+                self.ram_address += 1;
+            }
+            Some(address) => {
+                self.table.insert(symbol, address);
+            }
+        }
     }
 
     pub fn contains(&self, symbol: String) -> bool {
@@ -27,6 +37,7 @@ impl SymbolTable {
     fn make_predefined_symbol_table() -> SymbolTable {
         let mut symbol_table = SymbolTable {
             table: HashMap::new(),
+            ram_address: 16,
         };
         symbol_table.add_entry("SP".to_string(), format!("{:0>16b}", 0));
         symbol_table.add_entry("LCL".to_string(), format!("{:0>16b}", 1));
@@ -89,5 +100,17 @@ mod test {
     fn test_symbol_table_panic() {
         let table = SymbolTable::new();
         table.get_address("symbol");
+    }
+
+    #[test]
+    fn test_ram_addr() {
+        let mut table = SymbolTable::new();
+        table.add_entry("address16".to_string(), None);
+        table.add_entry("address17".to_string(), None);
+        assert_eq!(table.contains("address16".to_string()), true);
+        assert_eq!(table.get_address("address16"), format!("{:0>16b}", 16));
+
+        assert_eq!(table.contains("address17".to_string()), true);
+        assert_eq!(table.get_address("address17"), format!("{:0>16b}", 17));
     }
 }
